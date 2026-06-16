@@ -1,3 +1,6 @@
+// GitHub Pages / Vercel / Netlify will load this file before app.js.
+// Replace every REPLACE_WITH_* value below with your Firebase Web App config.
+// Firebase Web config is intended to be shipped to browsers; protect data with Realtime Database rules.
 window.firebaseConfig = {
   apiKey: "AIzaSyB2g_ReT3jWvgD7m3mUMgCiAoDSfupSohw",
   authDomain: "zhajinhua-game-bfeff.firebaseapp.com",
