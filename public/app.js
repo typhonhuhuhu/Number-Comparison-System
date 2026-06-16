@@ -2,7 +2,7 @@ let socket;
 let state = null;
 let view = 'home';
 let toast = '';
-let checklistOpen = innerWidth > 700;
+let ruleIntroOpen = false;
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -27,7 +27,7 @@ function connectSocket() {
 }
 
 function renderStaticFallback() {
-  app.innerHTML = `<section class="panel cover-card"><h2>需要 Node.js 服务端运行</h2><p>当前页面已经加载到炸金花娱乐模拟器前端，但没有连接到 Socket.IO 服务端。请在项目根目录运行：</p><ol><li><code>npm install</code></li><li><code>npm start</code></li><li>打开 <code>http://localhost:3000</code></li></ol><p class="notice-inline">本项目不支持仅靠 GitHub Pages 完整运行；联机、AI、发牌、下注、比牌和结算都依赖内存服务端，且不会保存长期积分。</p></section>${renderRuleChecklist()}`;
+  app.innerHTML = `<section class="panel cover-card"><h2>需要 Node.js 服务端运行</h2><p>当前页面已经加载到炸金花娱乐模拟器前端，但没有连接到 Socket.IO 服务端。请在项目根目录运行：</p><ol><li><code>npm install</code></li><li><code>npm start</code></li><li>打开 <code>http://localhost:3000</code></li></ol><p class="notice-inline">本项目不支持仅靠 GitHub Pages 完整运行；联机、AI、发牌、下注、比牌和结算都依赖内存服务端，且不会保存长期积分。</p></section>`;
 }
 
 connectSocket();
@@ -42,7 +42,7 @@ function nickname(id = 'nick') {
 }
 
 function defaultLocalSettings() {
-  return { maxPlayers: 4, initialPoints: 1000, ante: 50, maxRounds: 10, allowAI: true, aiDifficulty: 'normal' };
+  return { maxPlayers: 4, initialPoints: 1000, ante: 50, allowAI: true, aiDifficulty: 'normal' };
 }
 
 function settings(prefix = '') {
@@ -51,7 +51,6 @@ function settings(prefix = '') {
     maxPlayers: +(byId('maxPlayers')?.value || 4),
     initialPoints: +(byId('initialPoints')?.value || 1000),
     ante: +(byId('ante')?.value || 50),
-    maxRounds: +(byId('maxRounds')?.value || 10),
     allowAI: byId('allowAI')?.checked ?? true,
     aiDifficulty: byId('aiDifficulty')?.value || 'normal',
   };
@@ -134,7 +133,8 @@ function toggleReady() {
 function render() {
   const toastHtml = toast ? `<div class="panel toast">${toast}</div>` : '';
   const content = state ? renderStatefulView() : renderViewWithoutRoom();
-  app.innerHTML = `${toastHtml}${content}`;
+  document.body.dataset.view = view;
+  app.innerHTML = `${toastHtml}${content}${renderRuleIntroModal()}`;
   toast = '';
 }
 
@@ -157,7 +157,7 @@ function renderHome() {
 }
 
 function renderSoloSetup() {
-  return `<section class="page-head"><button class="secondary" onclick="go('home')">返回首页</button><div><span class="eyebrow">Solo</span><h2>单机模式</h2><p>与 AI 玩家进行本地对局，练习牌型判断、下注、弃牌与比牌。</p></div></section><section class="grid"><div class="panel hero"><h3>快速开始</h3><p>默认 4 人：你 + 3 名普通 AI；初始临时积分 1000，底注 50，最大 10 轮，开启动画。</p><input id="soloNick" placeholder="你的名称（可空）"><button class="primary-start" onclick="quickStartLocalGame()">快速开始</button></div><div class="panel"><h3>自定义开始</h3>${settingsHtml('solo', defaultLocalSettings(), false)}<button onclick="startCustomLocalGame()">开始单机游戏</button></div></section>`;
+  return `<section class="page-head"><button class="secondary" onclick="go('home')">返回首页</button><div><span class="eyebrow">Solo</span><h2>单机模式</h2><p>与 AI 玩家进行本地对局，练习牌型判断、下注、弃牌与比牌。</p></div></section><section class="grid"><div class="panel hero"><h3>快速开始</h3><p>默认 4 人：你 + 3 名普通 AI；初始临时积分 1000，底注 50，开启动画。</p><input id="soloNick" placeholder="你的名称（可空）"><button class="primary-start" onclick="quickStartLocalGame()">快速开始</button></div><div class="panel"><h3>自定义开始</h3>${settingsHtml('solo', defaultLocalSettings(), false)}<button onclick="startCustomLocalGame()">开始单机游戏</button></div></section>`;
 }
 
 function renderOnlineEntry() {
@@ -165,7 +165,7 @@ function renderOnlineEntry() {
 }
 
 function settingsHtml(prefix = '', values = state?.settings || defaultLocalSettings(), includeAI = true) {
-  return `<div class="settings-grid"><label>玩家人数<input id="${prefix}maxPlayers" type="number" min="2" max="8" value="${values.maxPlayers || 4}" onchange="emitSettings('${prefix}')"></label><label>初始临时积分<input id="${prefix}initialPoints" type="number" value="${values.initialPoints || 1000}" onchange="emitSettings('${prefix}')"></label><label>底注<input id="${prefix}ante" type="number" value="${values.ante || 50}" onchange="emitSettings('${prefix}')"></label><label>最大轮数<input id="${prefix}maxRounds" type="number" value="${values.maxRounds || 10}" onchange="emitSettings('${prefix}')"></label>${includeAI ? `<label class="checkline"><input id="${prefix}allowAI" type="checkbox" ${values.allowAI !== false ? 'checked' : ''} onchange="emitSettings('${prefix}')">允许 AI 补位</label>` : '<input id="soloallowAI" type="hidden" checked>'}<label>AI 难度<select id="${prefix}aiDifficulty" onchange="emitSettings('${prefix}')"><option value="easy" ${values.aiDifficulty === 'easy' ? 'selected' : ''}>简单</option><option value="normal" ${!values.aiDifficulty || values.aiDifficulty === 'normal' ? 'selected' : ''}>普通</option><option value="hard" ${values.aiDifficulty === 'hard' ? 'selected' : ''}>困难</option><option value="aggressive" ${values.aiDifficulty === 'aggressive' ? 'selected' : ''}>激进</option></select></label><label class="checkline"><input type="checkbox" checked>开启动画</label></div>`;
+  return `<div class="settings-grid"><label>玩家人数<input id="${prefix}maxPlayers" type="number" min="2" max="8" value="${values.maxPlayers || 4}" onchange="emitSettings('${prefix}')"></label><label>初始临时积分<input id="${prefix}initialPoints" type="number" value="${values.initialPoints || 1000}" onchange="emitSettings('${prefix}')"></label><label>底注<input id="${prefix}ante" type="number" value="${values.ante || 50}" onchange="emitSettings('${prefix}')"></label>${includeAI ? `<label class="checkline"><input id="${prefix}allowAI" type="checkbox" ${values.allowAI !== false ? 'checked' : ''} onchange="emitSettings('${prefix}')">允许 AI 补位</label>` : '<input id="soloallowAI" type="hidden" checked>'}<label>AI 难度<select id="${prefix}aiDifficulty" onchange="emitSettings('${prefix}')"><option value="easy" ${values.aiDifficulty === 'easy' ? 'selected' : ''}>简单</option><option value="normal" ${!values.aiDifficulty || values.aiDifficulty === 'normal' ? 'selected' : ''}>普通</option><option value="hard" ${values.aiDifficulty === 'hard' ? 'selected' : ''}>困难</option><option value="aggressive" ${values.aiDifficulty === 'aggressive' ? 'selected' : ''}>激进</option></select></label><label class="checkline"><input type="checkbox" checked>开启动画</label></div>`;
 }
 
 function renderRoomLobby() {
@@ -178,23 +178,39 @@ function renderLobbyPlayer(player) {
 }
 
 function renderGameTable() {
-  return `<section class="game-shell"><div class="top-bar"><button class="secondary" onclick="go('home')">返回首页</button><span>当前模式：${state.mode === 'local' ? '单机' : '联机'}</span>${state.mode === 'online' ? `<span>房间：${state.code}</span><button class="secondary" onclick="copyRoomCode()">复制房间码</button>` : ''}${statusPills()}</div><div class="table-layout"><main class="felt-table"><div class="pot-center"><div class="deck-icon">♠</div><strong>底池 ${state.pot || 0}</strong><small>当前下注 ${state.currentBet || 0}</small></div>${renderPlayers()}</main><aside class="side-panel">${renderActions()}${renderResult()}${renderRuleChecklist()}<section class="panel"><h2>游戏日志</h2><div class="logs">${(state.logs || []).map((x) => `<div>${x}</div>`).join('')}</div></section></aside></div></section>`;
+  return `<section class="game-shell"><div class="top-bar"><button class="secondary" onclick="go('home')">返回首页</button><button class="secondary" onclick="ruleIntroOpen=true;render()">规则介绍</button><span>当前模式：${state.mode === 'local' ? '单机' : '联机'}</span>${state.mode === 'online' ? `<span>房间：${state.code}</span><button class="secondary" onclick="copyRoomCode()">复制房间码</button>` : ''}${statusPills()}</div><div class="table-layout"><main class="felt-table"><div class="pot-center"><div class="deck-icon">♠</div><strong>底池 ${state.pot || 0}</strong><small>当前下注 ${state.currentBet || 0}</small></div>${renderPlayers()}</main><aside class="side-panel">${renderActions()}${renderResult()}<p class="mini-compliance">仅娱乐模拟；积分为本场临时分数，结束清零。</p><section class="panel"><h2>游戏日志</h2><div class="logs">${(state.logs || []).map((x) => `<div>${x}</div>`).join('')}</div></section></aside></div></section>`;
 }
 
 function statusPills() {
   const current = state.players.find((p) => p.id === state.currentPlayerId)?.nickname || '无';
   const left = state.players.filter((p) => !p.eliminated && !p.spectator).length;
   const hand = state.players.filter((p) => !p.eliminated && !p.spectator && !p.folded).length;
-  return [`阶段：${state.phase}`, `轮数：${state.round || 0}/${state.settings.maxRounds}`, `行动：${current}`, `未淘汰：${left}`, `未弃牌：${hand}`].map((x) => `<span class="pill">${x}</span>`).join('');
+  return [`阶段：${state.phase}`, `底池：${state.pot || 0}`, `当前下注：${state.currentBet || 0}`, `行动：${current}`, `未淘汰：${left}`, `未弃牌：${hand}`].map((x) => `<span class="pill">${x}</span>`).join('');
 }
 
-function renderRuleChecklist() {
+function renderRuleIntroModal() {
+  if (!ruleIntroOpen) return '';
   const s = state?.settings || defaultLocalSettings();
   const ps = state?.players || [];
-  const phase = state?.phase || 'waiting';
-  const eliminated = ps.some((p) => p.eliminated);
-  const items = [['本游戏仅为娱乐模拟，不涉及真实金钱。', true], ['所有积分都是本场临时娱乐分数。', true], [`初始临时积分：${s.initialPoints ?? '未设置'}`, true, 'waiting'], [`底注：${s.ante ?? '未设置'}`, true], [`玩家人数：${ps.length || 0} / ${s.maxPlayers ?? '未设置'}`, true, 'waiting'], [`最大轮数：${s.maxRounds ?? '未设置'}`, true], ['每名玩家每手发 3 张牌。', phase !== 'waiting', 'dealing'], ['可操作项：看牌、跟注、加注、弃牌、比牌。', phase === 'playing', 'playing'], ['牌型大小：豹子 > 顺金 > 金花 > 顺子 > 对子 > 散牌。', true], ['A23 视为最小顺子。', true], ['QKA 视为最大顺子。', true], ['花色不参与大小比较。', true], ['一手牌只剩一名未弃牌玩家时，该玩家赢得底池。', phase === 'handFinished', 'handFinished'], ['达到最大轮数后自动摊牌。', true], ['临时积分输光后玩家淘汰。', eliminated], ['淘汰玩家可以选择一名玩家旁观。', eliminated], ['旁观对象选择后本场不可更改。', true], ['旁观者默认不能看到未公开手牌。', true], ['场上只剩一名未淘汰玩家时，整场游戏结束。', phase === 'gameFinished', 'gameFinished'], ['整场游戏结束后所有临时积分清零。', phase === 'gameFinished', 'gameFinished']];
-  return `<section class="rule-card"><div class="rule-head"><h2>本场规则 Checklist</h2><button class="secondary" onclick="checklistOpen=!checklistOpen;render()">${checklistOpen ? '收起规则' : '展开规则'}</button></div><div class="rules ${checklistOpen ? '' : 'collapsed'}">${items.map((i) => `<div class="rule ${i[1] ? 'done' : ''} ${i[2] === phase || (!i[2] && i[0].includes('淘汰') && eliminated) ? 'active' : ''}">${i[0]}</div>`).join('')}</div></section>`;
+  const items = [
+    '本游戏仅为娱乐模拟，不涉及真实金钱。',
+    '所有积分都是本场临时娱乐分数。',
+    `初始临时积分：${s.initialPoints ?? '未设置'}；底注：${s.ante ?? '未设置'}；玩家人数：${ps.length || 0} / ${s.maxPlayers ?? '未设置'}。`,
+    '每名玩家每手发 3 张牌。',
+    '可操作项：看牌、跟注、加注、弃牌、比牌。',
+    '牌型大小：豹子 > 顺金 > 金花 > 顺子 > 对子 > 散牌。',
+    'A23 视为最小顺子。',
+    'QKA 视为最大顺子。',
+    '花色不参与大小比较。',
+    '一手牌只剩一名未弃牌玩家时，该玩家赢得底池。',
+    '玩家临时积分输光后淘汰。',
+    '淘汰玩家可以选择一名玩家旁观。',
+    '旁观对象选择后本场不可更改。',
+    '旁观者默认不能看到未公开手牌。',
+    '场上只剩一名未淘汰玩家时，整场游戏结束。',
+    '整场游戏结束后所有临时积分清零。',
+  ];
+  return `<div class="modal-mask" onclick="ruleIntroOpen=false;render()"><section class="rule-modal" onclick="event.stopPropagation()"><div class="rule-modal-head"><h2>规则介绍</h2><button class="secondary" onclick="ruleIntroOpen=false;render()">关闭</button></div><div class="rule-intro-list">${items.map((item) => `<div class="rule done">${item}</div>`).join('')}</div></section></div>`;
 }
 
 function renderPlayers() {
