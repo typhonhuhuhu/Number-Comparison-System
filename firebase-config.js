@@ -1,4 +1,4 @@
-const firebaseConfig = {
+window.firebaseConfig = {
   apiKey: "AIzaSyB2g_ReT3jWvgD7m3mUMgCiAoDSfupSohw",
   authDomain: "zhajinhua-game-bfeff.firebaseapp.com",
   databaseURL: "https://zhajinhua-game-bfeff-default-rtdb.asia-southeast1.firebasedatabase.app/",
