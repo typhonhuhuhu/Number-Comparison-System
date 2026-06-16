@@ -11,7 +11,9 @@
 
 仓库根目录新增了 `index.html`，用于静态站点入口提示/跳转；但静态页面无法提供联机房间、AI 自动行动、服务端发牌和结算。完整功能请按下面步骤运行。
 
-## 快速开始
+## 启动方式
+
+### 方式一：命令行启动
 
 ```bash
 npm install
@@ -23,6 +25,27 @@ npm start
 ```text
 http://localhost:3000
 ```
+
+### 方式二：Windows 一键启动
+
+Windows 用户可以直接双击：
+
+```text
+一键启动-Windows.bat
+```
+
+脚本会自动执行 `npm install`、尝试打开 `http://localhost:3000`，然后执行 `npm start`。如果未安装 npm，请先安装 Node.js。
+
+### 方式三：部署到 Node.js 平台
+
+可以部署到 Render / Railway / Fly.io / VPS 等支持 Node.js 和 WebSocket 的平台。部署命令通常为：
+
+```bash
+npm install
+npm start
+```
+
+> 本项目不能只靠 GitHub Pages 完整运行，因为联机、AI、发牌、比牌和结算依赖 Node.js + Socket.IO 服务端。
 
 ## 测试/检查
 
@@ -41,6 +64,7 @@ node --check server.js && node --check public/app.js
 ```text
 .
 ├── index.html              # 静态入口/跳转提示，避免仓库静态页面只显示 README
+├── 一键启动-Windows.bat    # Windows 一键安装依赖并启动服务
 ├── package.json            # npm 脚本与依赖
 ├── server.js               # Express + Socket.IO 服务端，内存房间和游戏逻辑
 └── public/
@@ -51,6 +75,8 @@ node --check server.js && node --check public/app.js
 
 ## 功能概览
 
+- 本地快速开始：点击首页主按钮后自动创建本地人机房间、补齐 AI、开始整场游戏并进入发牌阶段。
+- 本地自定义游戏：设置玩家人数、初始临时积分、底注、最大轮数和 AI 难度后，一键创建并自动开始。
 - 本地人机模式：真人玩家 + AI 补位。
 - 联机真人房间模式：创建房间、复制房间码、输入房间码加入。
 - 房主设置：最大玩家数、初始临时积分、底注、最大轮数、是否 AI 补位、AI 难度。
