@@ -1,13 +1,25 @@
 let socket, state=null, mode='home', toast='', checklistOpen=innerWidth>700;
 const $=id=>document.getElementById(id), app=$('app');
-function connectSocket(){socket=io();socket.on('roomState',s=>{state=s;mode='room';render();});socket.on('errorMessage',m=>{toast=m;render();});}
+function connectSocket(){
+  if (typeof io === 'undefined') {
+    socket = null;
+    renderStaticFallback();
+    return;
+  }
+  socket=io();
+  socket.on('roomState',s=>{state=s;mode='room';render();});
+  socket.on('errorMessage',m=>{toast=m;render();});
+}
+function renderStaticFallback(){
+  app.innerHTML = `<section class="panel"><h2>需要 Node.js 服务端运行</h2><p>当前页面已经加载到炸金花娱乐模拟器前端，但没有连接到 Socket.IO 服务端。请在项目根目录运行：</p><ol><li><code>npm install</code></li><li><code>npm start</code></li><li>打开 <code>http://localhost:3000</code></li></ol><p class="notice-inline">本项目不支持仅靠 GitHub README 页面运行联机/AI 游戏；房间、发牌、下注、比牌和结算都由内存服务端处理，且不会保存长期积分。</p></section>${renderRuleChecklist()}`;
+}
 connectSocket();
 function nickname(){return $('nick')?.value.trim()||''} function settings(){return {maxPlayers:+($('maxPlayers')?.value||6),initialPoints:+($('initialPoints')?.value||1000),ante:+($('ante')?.value||50),maxRounds:+($('maxRounds')?.value||10),allowAI:$('allowAI')?.checked??true,aiDifficulty:$('aiDifficulty')?.value||'normal'}}
-function emitSettings(){socket.emit('updateSettings',settings())}
-function createRoom(local=false){mode=local?'local':'room';socket.emit('createRoom',{nickname:nickname(),mode:local?'local':'online',settings:settings()})}
-function joinRoom(){socket.emit('joinRoom',{roomCode:$('roomCode').value,nickname:nickname()})}
+function emitSettings(){if(socket) socket.emit('updateSettings',settings())}
+function createRoom(local=false){if(!socket)return renderStaticFallback();mode=local?'local':'room';socket.emit('createRoom',{nickname:nickname(),mode:local?'local':'online',settings:settings()})}
+function joinRoom(){if(!socket)return renderStaticFallback();socket.emit('joinRoom',{roomCode:$('roomCode').value,nickname:nickname()})}
 function copyRoomCode(){if(!state?.code){toast='暂无房间码';return render()} navigator.clipboard?.writeText(state.code).then(()=>{toast='房间码已复制';render()}).catch(()=>{toast='复制失败，请手动复制';render()})}
-function me(){return state?.players?.find(p=>p.id===socket.id)}
+function me(){return socket&&state?.players?.find(p=>p.id===socket.id)}
 function canAct(){const p=me();return state?.phase==='playing'&&p?.current&&!p.eliminated&&!p.spectator&&!p.folded}
 function sendAction(action){let d={action}; if(action==='raise')d.amount=+$('raiseAmount').value; if(action==='compare')d.targetPlayerId=$('compareTarget').value; socket.emit('action',d)}
 function chooseSpectateTarget(){socket.emit('spectate',$('spectateTarget').value)}
