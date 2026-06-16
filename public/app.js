@@ -135,7 +135,7 @@ function render() {
   const toastHtml = toast ? `<div class="panel toast">${toast}</div>` : '';
   const content = state ? renderStatefulView() : renderViewWithoutRoom();
   document.body.dataset.view = view;
-  app.innerHTML = `${toastHtml}${content}${renderRuleIntroModal()}`;
+  app.innerHTML = `${toastHtml}${content}${renderRuleIntroModal()}${renderLogModal()}`;
   toast = '';
 }
 
@@ -184,7 +184,7 @@ function renderGameTable() {
   const top = opponents.filter((_, i) => i % 3 === 0);
   const left = opponents.filter((_, i) => i % 3 === 1);
   const right = opponents.filter((_, i) => i % 3 === 2);
-  return `<section class="game-shell play-view"><div class="compact-topbar"><button class="secondary" onclick="go('home')">返回首页</button><button class="secondary" onclick="ruleIntroOpen=true;render()">规则介绍</button><span>模式：${state.mode === 'local' ? '单机' : '联机'}</span>${state.mode === 'online' ? `<span>房间：${state.code}</span><button class="secondary" onclick="copyRoomCode()">复制房间码</button>` : ''}${statusPills()}</div><div class="game-table-layout"><div class="opponents opponents-top">${top.map(renderCompactPlayerCard).join('')}</div><div class="table-middle"><div class="opponents opponents-left">${left.map(renderCompactPlayerCard).join('')}</div><div class="pot-area"><div class="deck-card back"></div><strong>底池 ${state.pot || 0}</strong><span>当前下注 ${state.currentBet || 0}</span><small>${state.phase === 'dealing' ? '正在发牌...' : state.phase === 'playing' ? '等待玩家行动' : state.phase === 'handFinished' ? '本手已结算' : state.phase === 'gameFinished' ? '整场已结束' : '准备中'}</small></div><div class="opponents opponents-right">${right.map(renderCompactPlayerCard).join('')}</div></div></div>${renderMyPlayerZone(self)}<div class="bottom-panels">${renderResult()}${renderGameLogs()}</div></section>`;
+  return `<section class="game-shell play-view"><div class="compact-topbar"><button class="secondary" onclick="go('home')">返回首页</button><button class="secondary" onclick="ruleIntroOpen=true;render()">规则介绍</button><button class="secondary" onclick="logOpen=true;render()">查看日志</button><span>模式：${state.mode === 'local' ? '单机' : '联机'}</span>${state.mode === 'online' ? `<span>房间：${state.code}</span><button class="secondary" onclick="copyRoomCode()">复制房间码</button>` : ''}${statusPills()}</div><div class="game-table-layout"><div class="opponents opponents-top">${top.map(renderCompactPlayerCard).join('')}</div><div class="table-middle"><div class="opponents opponents-left">${left.map(renderCompactPlayerCard).join('')}</div><div class="pot-area"><div class="deck-card back"></div><strong>底池 ${state.pot || 0}</strong><span>当前下注 ${state.currentBet || 0}</span><small>${state.phase === 'dealing' ? '正在发牌...' : state.phase === 'playing' ? '等待玩家行动' : state.phase === 'handFinished' ? '本手已结算' : state.phase === 'gameFinished' ? '整场已结束' : '准备中'}</small></div><div class="opponents opponents-right">${right.map(renderCompactPlayerCard).join('')}</div></div></div>${renderMyPlayerZone(self)}<div class="bottom-panels">${renderResult()}</div></section>`;
 }
 
 function renderCompactPlayerCard(player) {
@@ -198,8 +198,9 @@ function renderMyPlayerZone(player) {
   return `<section class="my-player-zone ${player.current ? 'current' : ''} ${player.eliminated ? 'eliminated' : ''} ${hr?.winner ? 'handWinner' : ''}"><div class="my-player-info"><strong>${player.nickname} ${player.isHost ? '👑' : ''}</strong><span>${player.isAI ? 'AI ' + player.aiDifficulty : '我的座位'}</span><span>临时积分：${player.points}</span><span>本手投入：${player.bet}</span><span>状态：${player.spectator ? '旁观' : player.eliminated ? '已淘汰' : player.folded ? '已弃牌' : player.looked ? '已看牌' : '未看牌'}</span></div><div class="my-cards">${renderCards(player)}</div><div class="my-actions">${renderActions()}</div><p class="mini-compliance">仅娱乐模拟；积分为本场临时分数，结束清零。</p></section>`;
 }
 
-function renderGameLogs() {
-  return `<section class="panel log-panel"><div class="log-head"><h2>游戏日志</h2><button class="secondary" onclick="logOpen=!logOpen;render()">${logOpen ? '收起日志' : '查看日志'}</button></div>${logOpen ? `<div class="logs">${(state.logs || []).map((x) => `<div>${x}</div>`).join('')}</div>` : `<p class="muted">日志已折叠，点击“查看日志”查看最近操作。</p>`}</section>`;
+function renderLogModal() {
+  if (!logOpen) return '';
+  return `<div class="modal-mask log-mask" onclick="logOpen=false;render()"><section class="rule-modal log-modal" onclick="event.stopPropagation()"><div class="rule-modal-head"><h2>游戏日志</h2><button class="secondary" onclick="logOpen=false;render()">关闭</button></div><div class="logs">${(state?.logs || []).map((x) => `<div>${x}</div>`).join('')}</div></section></div>`;
 }
 
 function statusPills() {
