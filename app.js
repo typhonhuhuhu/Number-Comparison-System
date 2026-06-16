@@ -12,10 +12,12 @@ const SUITS = ['♠', '♥', '♣', '♦'];
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 const VAL = Object.fromEntries(RANKS.map((r, i) => [r, i + 2]));
 const DEFAULT_SETTINGS = { maxPlayers: 4, initialPoints: 1000, ante: 50, allowAI: true, aiDifficulty: 'normal' };
-const hasFirebaseConfig = typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('YOUR_');
+const firebaseConfigForApp = window.firebaseConfig || null;
+const firebaseConfigText = JSON.stringify(firebaseConfigForApp || {});
+const hasFirebaseConfig = !!(firebaseConfigForApp && firebaseConfigForApp.apiKey && firebaseConfigForApp.databaseURL && !firebaseConfigText.includes('YOUR_') && !firebaseConfigText.includes('REPLACE_WITH'));
 let db = null;
 if (hasFirebaseConfig && window.firebase) {
-  firebase.initializeApp(firebaseConfig);
+  firebase.initializeApp(firebaseConfigForApp);
   db = firebase.database();
 }
 function showToast(message) { toast = message; render(); }
@@ -32,7 +34,7 @@ function writeRoom(next) { if (!next) return; next.updatedAt = Date.now(); state
 function listenRoom(code) { if (!db) return; if (roomRef) roomRef.off(); roomRef = db.ref(`rooms/${code}`); roomRef.on('value', (snap) => { const next = snap.val(); if (!next) { showToast('房间不存在或已删除。'); state = null; view = 'onlineEntry'; return; } state = next; view = next.phase === 'waiting' ? 'roomLobby' : 'gameTable'; render(); maybeRunAI(); }); }
 function quickStartLocalGame() { const room = createRoomObject({ mode: 'local', nickname: nickname('soloNick'), settings: defaultLocalSettings() }); view = 'gameTable'; state = room; startGame(true); }
 function startCustomLocalGame() { const room = createRoomObject({ mode: 'local', nickname: nickname('soloNick'), settings: { ...settings('solo'), allowAI: true } }); view = 'gameTable'; state = room; startGame(true); }
-function createOnlineRoom() { if (!db) return showToast('请先复制 firebase-config.example.js 为 firebase-config.js 并填写 Firebase 配置。'); const room = createRoomObject({ mode: 'online', nickname: nickname('hostNick') || '房主', settings: settings('online') }); view = 'roomLobby'; db.ref(`rooms/${room.code}`).set(room).then(() => listenRoom(room.code)); }
+function createOnlineRoom() { if (!db) return showToast('请确认根目录 firebase-config.js 已填写真实 Firebase 配置，并使用 window.firebaseConfig = {...}。'); const room = createRoomObject({ mode: 'online', nickname: nickname('hostNick') || '房主', settings: settings('online') }); view = 'roomLobby'; db.ref(`rooms/${room.code}`).set(room).then(() => listenRoom(room.code)); }
 function joinRoom() { if (!db) return showToast('当前未配置 Firebase，无法使用联机模式。'); const code = ($('roomCode')?.value || '').trim().toUpperCase(); if (!code) return showToast('请输入房间码。'); db.ref(`rooms/${code}`).get().then((snap) => { const room = snap.val(); if (!room) return showToast('房间不存在。'); if (room.phase !== 'waiting') return showToast('游戏已开始，暂不能加入。'); if ((room.players || []).length >= room.settings.maxPlayers) return showToast('房间已满。'); room.players.push(makePlayer({ id: playerId, nickname: nickname('joinNick') })); addLog(room, `${nickname('joinNick')} 加入房间。`); db.ref(`rooms/${code}`).set(room).then(() => listenRoom(code)); }); }
 function copyRoomCode() { if (!state?.code) return showToast('暂无房间码'); navigator.clipboard?.writeText(state.code).then(() => showToast('房间码已复制')).catch(() => showToast('复制失败，请手动复制')); }
 function me() { return state?.players?.find((p) => p.id === playerId); }

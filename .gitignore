@@ -217,6 +217,5 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Local Firebase credentials for static deployment
-firebase-config.js
+# Static app: firebase-config.js must be committed for GitHub Pages deployments.
 node_modules/

@@ -21,7 +21,8 @@
 ├── index.html
 ├── style.css
 ├── app.js
-├── firebase-config.example.js
+├── firebase-config.example.js  # 模板，不用于直接运行
+├── firebase-config.js          # 真实运行配置：GitHub Pages 会加载这个文件
 ├── README.md
 ├── LICENSE
 └── .gitignore
@@ -51,28 +52,29 @@
 }
 ```
 
-5. 复制 `firebase-config.example.js` 为 `firebase-config.js`。
-6. 将 Firebase 控制台提供的配置填入 `firebase-config.js`：
+5. 复制 `firebase-config.example.js` 为根目录下的 `firebase-config.js`。`firebase-config.example.js` 只是模板，真正运行和部署时必须加载 `firebase-config.js`。
+6. 将 Firebase 控制台提供的 Web 配置填入 `firebase-config.js`，并务必使用 `window.firebaseConfig = {...}`，不要使用 `const firebaseConfig = {...}`：
 
 ```js
-const firebaseConfig = {
-  apiKey: "...",
-  authDomain: "...",
-  databaseURL: "...",
-  projectId: "...",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "..."
+window.firebaseConfig = {
+  apiKey: "你的真实 apiKey",
+  authDomain: "你的项目.firebaseapp.com",
+  databaseURL: "https://你的项目-default-rtdb.firebaseio.com",
+  projectId: "你的项目 ID",
+  storageBucket: "你的项目.appspot.com",
+  messagingSenderId: "你的 senderId",
+  appId: "你的 appId"
 };
 ```
 
-7. 确保 `index.html` 能加载 `firebase-config.js`。
+7. 访问部署网址的 `/firebase-config.js`，应当能看到 `window.firebaseConfig` 和你的真实 Firebase 配置，而不是 `YOUR_API_KEY`、`YOUR_PROJECT`、`YOUR_APP_ID` 或 `REPLACE_WITH_*`。
+8. `index.html` 已按顺序加载 Firebase SDK、`firebase-config.js`、`app.js`，请不要改成 `firebase-config.example.js`。
 
 ## 部署到 GitHub Pages
 
-1. 将项目上传到 GitHub。
-2. 在仓库 Settings → Pages 中选择分支和根目录。
-3. 确保仓库中包含你自己的 `firebase-config.js`（如果公开仓库不想暴露配置，可使用 Vercel 环境变量方式自行改造）。
+1. 将项目上传到 GitHub，并确认真实的根目录 `firebase-config.js` 已提交到仓库。
+2. 在仓库 Settings → Pages 中选择 `main` 分支和 `/root` 根目录。
+3. 打开 Pages 网址后，先访问 `/firebase-config.js` 检查是否显示 `window.firebaseConfig` 和真实配置；如果仍显示 `YOUR_API_KEY`、`YOUR_PROJECT` 或 `REPLACE_WITH_*`，说明部署源目录、提交内容或真实配置替换不正确。
 4. 打开 Pages 网址即可使用。
 
 ## 部署到 Vercel / Netlify
