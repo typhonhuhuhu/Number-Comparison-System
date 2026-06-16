@@ -1,6 +1,6 @@
 # 炸金花娱乐模拟器（纯前端 + Firebase 版）
 
-一个可以部署到 GitHub Pages / Vercel / Netlify 的炸金花规则娱乐模拟器。项目使用 **HTML + CSS + JavaScript + Firebase Realtime Database**，不再需要 Node.js、Express、Socket.IO 或自建服务端。
+一个可以部署到 GitHub Pages / Vercel / Netlify 的炸金花规则娱乐模拟器。项目使用 **HTML + CSS + JavaScript + Firebase Realtime Database**，不再需要 Node.js、Express、Socket.IO、Render 或任何自建服务端。
 
 > 合规声明：本游戏仅为扑克牌规则娱乐模拟，不涉及真实金钱、充值、提现、兑换、奖励或任何形式的赌博行为。所有积分仅为本场临时娱乐分数，游戏结束后自动清零。
 
@@ -22,7 +22,9 @@
 ├── style.css
 ├── app.js
 ├── firebase-config.example.js
-└── README.md
+├── README.md
+├── LICENSE
+└── .gitignore
 ```
 
 ## 本地预览
@@ -80,6 +82,31 @@ const firebaseConfig = {
 3. 输出目录选择项目根目录。
 4. 部署后访问公开网址。
 
+
+## Firebase 房间数据结构
+
+联机房间状态写入 Realtime Database：
+
+```text
+rooms/{roomCode} = {
+  roomCode,
+  phase,
+  settings,
+  players,
+  deck,
+  pot,
+  currentBet,
+  currentPlayerId,
+  logs,
+  handResult,
+  gameResult,
+  createdAt,
+  updatedAt
+}
+```
+
+房主客户端负责洗牌、发牌、结算和更新房间状态。为了方便静态部署，本项目不做防作弊，客户端可以持有完整牌面和房间状态。
+
 ## 联机使用流程
 
 1. 玩家 A 打开网页，进入“联机模式”。
@@ -90,7 +117,7 @@ const firebaseConfig = {
 
 ## 注意事项
 
-- 本版本不需要 Node.js 服务端，也不要运行 `npm install` / `npm start`。
+- 本版本不使用 Render，不需要 Node.js 服务端，也不要运行 `npm install` / `npm start`。
 - 本版本不防作弊，适合朋友娱乐、规则演示和低成本部署。
 - Firebase 免费额度和数据库规则由项目部署者自行管理。
 - 所有积分都是当前房间当前场次内的临时娱乐分数，不具有任何现实价值。
