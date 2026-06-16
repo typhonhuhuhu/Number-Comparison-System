@@ -1,140 +1,96 @@
-# 炸金花娱乐模拟器 / Number-Comparison-System
+# 炸金花娱乐模拟器（纯前端 + Firebase 版）
 
-一个基于 **Node.js + Express + Socket.IO + HTML/CSS/JavaScript** 的炸金花规则娱乐模拟网站。
+一个可以部署到 GitHub Pages / Vercel / Netlify 的炸金花规则娱乐模拟器。项目使用 **HTML + CSS + JavaScript + Firebase Realtime Database**，不再需要 Node.js、Express、Socket.IO 或自建服务端。
 
-> **合规声明**：本项目仅为扑克牌规则娱乐模拟，不涉及真实金钱、充值、提现、兑换、奖励或任何形式的赌博行为。所有积分仅为本场临时娱乐分数，游戏结束后自动清零；项目不包含数据库、登录、账户余额、长期积分、排行榜奖励、平台抽水、虚拟币兑换、房卡、门票或任何付费开房机制。
+> 合规声明：本游戏仅为扑克牌规则娱乐模拟，不涉及真实金钱、充值、提现、兑换、奖励或任何形式的赌博行为。所有积分仅为本场临时娱乐分数，游戏结束后自动清零。
 
-## 为什么直接点开仓库页面只看到 README？
+## 特点
 
-如果你打开的是 GitHub 仓库主页，GitHub 会默认展示 README，而不是运行 Node.js 服务端。
-本项目的完整功能依赖 Socket.IO 服务端，必须在本地或 Node.js 部署环境中运行。
-
-仓库根目录新增了 `index.html`，用于静态站点入口提示/跳转；但静态页面无法提供联机房间、AI 自动行动、服务端发牌和结算。完整功能请按下面步骤运行。
-
-## 启动方式
-
-### 方式一：命令行启动
-
-```bash
-npm install
-npm start
-```
-
-然后在浏览器打开：
-
-```text
-http://localhost:3000
-```
-
-### 方式二：Windows 一键启动
-
-Windows 用户可以直接双击：
-
-```text
-一键启动-Windows.bat
-```
-
-脚本会自动执行 `npm install`、尝试打开 `http://localhost:3000`，然后执行 `npm start`。如果未安装 npm，请先安装 Node.js。
-
-### 方式三：部署到 Node.js 平台
-
-可以部署到 Render / Railway / Fly.io / VPS 等支持 Node.js 和 WebSocket 的平台。部署命令通常为：
-
-```bash
-npm install
-npm start
-```
-
-> 本项目不能只靠 GitHub Pages 完整运行，因为联机、AI、发牌、比牌和结算依赖 Node.js + Socket.IO 服务端。
-
-## 测试/检查
-
-```bash
-npm test
-```
-
-该命令会运行：
-
-```bash
-node --check server.js && node --check public/app.js
-```
+- 首页封面、单机模式、联机模式、房间大厅、游戏桌面。
+- 单机模式可快速开始，自动补 AI。
+- 联机模式使用 Firebase Realtime Database 同步房间状态。
+- 创建房间、复制房间码、加入房间、房主开始、AI 补位。
+- 支持看牌、跟注、加注、弃牌、比牌、淘汰、旁观、结算清零。
+- 不做防作弊：为了方便静态部署，房间状态、牌堆和玩家手牌会存储在 Firebase 房间数据中。
+- 不保存账户、余额、长期积分、排行榜、战绩或任何现实利益。
 
 ## 项目结构
 
 ```text
 .
-├── index.html              # 静态入口/跳转提示，避免仓库静态页面只显示 README
-├── 一键启动-Windows.bat    # Windows 一键安装依赖并启动服务
-├── package.json            # npm 脚本与依赖
-├── server.js               # Express + Socket.IO 服务端，内存房间和游戏逻辑
-└── public/
-    ├── index.html          # 浏览器应用入口
-    ├── style.css           # 紫白主题、扑克牌、规则介绍、响应式布局
-    └── app.js              # 前端渲染、房间交互、操作区、规则介绍
+├── index.html
+├── style.css
+├── app.js
+├── firebase-config.example.js
+└── README.md
 ```
 
+## 本地预览
 
-## 页面流程
+可以直接用浏览器打开 `index.html` 体验单机模式。
 
-网站前端现在按游戏入口流程组织：
+联机模式需要先配置 Firebase，并建议用任意静态服务器打开，例如 VS Code Live Server、Python 简单服务器或 Vercel 本地预览。
 
-1. `home`：封面式首页，只展示游戏说明和“单机模式 / 联机模式”入口。
-2. `soloSetup`：单机模式设置，可快速开始或自定义后直接进入游戏桌面。
-3. `onlineEntry`：联机入口，可创建房间或输入房间码加入。
-4. `roomLobby`：联机房间大厅，展示房间码、玩家列表、房主设置和开始按钮。
-5. `gameTable`：游戏桌面，展示状态栏、牌桌、玩家卡片、操作区、日志和规则介绍。
+## Firebase 配置步骤
 
-## 功能概览
+1. 打开 <https://console.firebase.google.com/> 并创建项目。
+2. 在项目中添加一个 Web App。
+3. 开启 **Realtime Database**。
+4. 测试阶段可使用如下数据库规则（正式使用请自行收紧）：
 
-- 本地快速开始：点击首页主按钮后自动创建本地人机房间、补齐 AI、开始整场游戏并进入发牌阶段。
-- 本地自定义游戏：设置玩家人数、初始临时积分、底注和 AI 难度后，一键创建并自动开始。
-- 本地人机模式：真人玩家 + AI 补位。
-- 联机真人房间模式：创建房间、复制房间码、输入房间码加入。
-- 房主设置：最大玩家数、初始临时积分、底注、是否 AI 补位、AI 难度。
-- 服务端掌握真实牌面：创建牌堆、洗牌、发牌、牌型评估、比牌、结算均在服务端完成。
-- 支持最多 8 人。
-- 支持看牌、跟注、加注、弃牌、比牌。
-- 支持简单、普通、困难、激进 4 种 AI 难度。
-- 支持玩家临时积分归零淘汰。
-- 淘汰玩家可选择一个未淘汰玩家旁观；旁观对象本场不可更改。
-- 一手牌结束后亮牌；整场结束后所有临时积分清零。
-- 页面包含醒目的纯娱乐合规提示。
-- 页面包含点击按钮打开的“规则介绍”，展示本场规则和合规说明。
-- 不使用数据库，不保存历史战绩，不使用 `localStorage` 保存长期积分。
+```json
+{
+  "rules": {
+    "rooms": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
+```
 
-## 牌型规则
+5. 复制 `firebase-config.example.js` 为 `firebase-config.js`。
+6. 将 Firebase 控制台提供的配置填入 `firebase-config.js`：
 
-从大到小：
+```js
+const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  databaseURL: "...",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "..."
+};
+```
 
-1. 豹子
-2. 顺金 / 同花顺
-3. 金花 / 同花
-4. 顺子
-5. 对子
-6. 散牌
+7. 确保 `index.html` 能加载 `firebase-config.js`。
 
-补充规则：
+## 部署到 GitHub Pages
 
-- A 最大，2 最小。
-- A23 视为最小顺子。
-- QKA 视为最大顺子。
-- 花色不参与大小比较。
-- 完全相同则平局，底池平分；无法整除的余数给最早进入胜者列表的玩家。
+1. 将项目上传到 GitHub。
+2. 在仓库 Settings → Pages 中选择分支和根目录。
+3. 确保仓库中包含你自己的 `firebase-config.js`（如果公开仓库不想暴露配置，可使用 Vercel 环境变量方式自行改造）。
+4. 打开 Pages 网址即可使用。
 
-## 部署说明
+## 部署到 Vercel / Netlify
 
-本项目需要 Node.js 服务端，不适合只用 GitHub Pages 部署完整功能。可以部署到支持 Node.js 和 WebSocket 的平台，例如自有服务器、Render、Railway、Fly.io、VPS 等。
+1. 导入该静态项目。
+2. 构建命令留空。
+3. 输出目录选择项目根目录。
+4. 部署后访问公开网址。
 
-部署后确保：
+## 联机使用流程
 
-- 安装依赖：`npm install`
-- 启动命令：`npm start`
-- 服务端允许 WebSocket / Socket.IO 连接
-- 不配置数据库，因为项目所有房间和积分仅保存在服务端内存中
+1. 玩家 A 打开网页，进入“联机模式”。
+2. 创建房间并复制房间码。
+3. 玩家 B 打开同一个网址，输入房间码加入。
+4. 房主点击开始游戏或 AI 补位后开始。
+5. 所有客户端通过 Firebase 实时同步房间状态。
 
-## 开发说明
+## 注意事项
 
-- 房间数据保存在 `server.js` 进程内存中，服务器重启后全部消失。
-- 客户端不会收到其他玩家未公开手牌。
-- 客户端只发送操作请求，服务端验证阶段、回合、淘汰、旁观、弃牌等状态后再执行。
-- 所有临时积分只在当前整场游戏内有效，整场结束后自动清零。
+- 本版本不需要 Node.js 服务端，也不要运行 `npm install` / `npm start`。
+- 本版本不防作弊，适合朋友娱乐、规则演示和低成本部署。
+- Firebase 免费额度和数据库规则由项目部署者自行管理。
+- 所有积分都是当前房间当前场次内的临时娱乐分数，不具有任何现实价值。

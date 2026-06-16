@@ -3,21 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=public/index.html">
   <title>炸金花娱乐模拟器</title>
-  <link rel="stylesheet" href="public/style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
     <h1>炸金花娱乐模拟器</h1>
     <p class="notice">本游戏仅为扑克牌规则娱乐模拟，不涉及真实金钱、充值、提现、兑换、奖励或任何形式的赌博行为。所有积分仅为本场临时娱乐分数，游戏结束后自动清零。</p>
   </header>
-  <main>
-    <section class="panel">
-      <h2>正在打开应用...</h2>
-      <p>如果没有自动跳转，请点击 <a href="public/index.html">进入炸金花娱乐模拟器</a>。</p>
-      <p>完整联机/AI 功能需要运行 Node.js 服务端：<code>npm install</code> 后执行 <code>npm start</code>，再访问 <code>http://localhost:3000</code>。</p>
-    </section>
-  </main>
+  <main id="app"></main>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
