@@ -3,6 +3,7 @@ let state = null;
 let view = 'home';
 let toast = '';
 let ruleIntroOpen = false;
+let logOpen = false;
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -157,15 +158,15 @@ function renderHome() {
 }
 
 function renderSoloSetup() {
-  return `<section class="page-head"><button class="secondary" onclick="go('home')">返回首页</button><div><span class="eyebrow">Solo</span><h2>单机模式</h2><p>与 AI 玩家进行本地对局，练习牌型判断、下注、弃牌与比牌。</p></div></section><section class="grid"><div class="panel hero"><h3>快速开始</h3><p>默认 4 人：你 + 3 名普通 AI；初始临时积分 1000，底注 50，开启动画。</p><input id="soloNick" placeholder="你的名称（可空）"><button class="primary-start" onclick="quickStartLocalGame()">快速开始</button></div><div class="panel"><h3>自定义开始</h3>${settingsHtml('solo', defaultLocalSettings(), false)}<button onclick="startCustomLocalGame()">开始单机游戏</button></div></section>`;
+  return `<section class="page-head"><button class="secondary" onclick="go('home')">返回首页</button><div><span class="eyebrow">Solo</span><h2>单机模式</h2><p>与 AI 玩家进行本地对局，练习牌型判断、下注、弃牌与比牌。</p></div></section><section class="grid"><div class="panel hero"><h3>快速开始</h3><p>默认 4 人：你 + 3 名普通 AI；初始临时积分 1000，底注 50，开启动画。</p><label class="form-field"><span>你的名称</span><input id="soloNick" placeholder="可空，默认自动生成"></label><div class="form-actions"><button class="primary-start" onclick="quickStartLocalGame()">快速开始</button></div></div><div class="panel"><h3>自定义开始</h3>${settingsHtml('solo', defaultLocalSettings(), false)}<div class="form-actions"><button onclick="startCustomLocalGame()">开始单机游戏</button></div></div></section>`;
 }
 
 function renderOnlineEntry() {
-  return `<section class="page-head"><button class="secondary" onclick="go('home')">返回首页</button><div><span class="eyebrow">Online</span><h2>联机模式</h2><p>创建房间并复制房间码，或输入房间码加入好友对局。</p></div></section><section class="grid two"><div class="panel"><h3>创建房间</h3><input id="hostNick" value="房主" placeholder="你的名称"><h4>房间参数</h4>${settingsHtml('online', defaultLocalSettings(), true)}<button onclick="createOnlineRoom()">创建房间</button></div><div class="panel"><h3>加入房间</h3><input id="joinNick" placeholder="你的名称（可空）"><input id="roomCode" placeholder="输入房间码"><button onclick="joinRoom()">加入房间</button></div></section>`;
+  return `<section class="page-head"><button class="secondary" onclick="go('home')">返回首页</button><div><span class="eyebrow">Online</span><h2>联机模式</h2><p>创建房间并复制房间码，或输入房间码加入好友对局。</p></div></section><section class="grid two"><div class="panel"><h3>创建房间</h3><div class="form-grid single"><label class="form-field"><span>你的名称</span><input id="hostNick" value="房主" placeholder="你的名称"></label></div><h4>房间参数</h4>${settingsHtml('online', defaultLocalSettings(), true)}<div class="form-actions"><button onclick="createOnlineRoom()">创建房间</button></div></div><div class="panel"><h3>加入房间</h3><div class="form-grid single"><label class="form-field"><span>你的名称</span><input id="joinNick" placeholder="可空，默认自动生成"></label><label class="form-field"><span>房间码</span><input id="roomCode" placeholder="输入 10 位房间码"></label></div><div class="form-actions"><button onclick="joinRoom()">加入房间</button></div></div></section>`;
 }
 
 function settingsHtml(prefix = '', values = state?.settings || defaultLocalSettings(), includeAI = true) {
-  return `<div class="settings-grid"><label>玩家人数<input id="${prefix}maxPlayers" type="number" min="2" max="8" value="${values.maxPlayers || 4}" onchange="emitSettings('${prefix}')"></label><label>初始临时积分<input id="${prefix}initialPoints" type="number" value="${values.initialPoints || 1000}" onchange="emitSettings('${prefix}')"></label><label>底注<input id="${prefix}ante" type="number" value="${values.ante || 50}" onchange="emitSettings('${prefix}')"></label>${includeAI ? `<label class="checkline"><input id="${prefix}allowAI" type="checkbox" ${values.allowAI !== false ? 'checked' : ''} onchange="emitSettings('${prefix}')">允许 AI 补位</label>` : '<input id="soloallowAI" type="hidden" checked>'}<label>AI 难度<select id="${prefix}aiDifficulty" onchange="emitSettings('${prefix}')"><option value="easy" ${values.aiDifficulty === 'easy' ? 'selected' : ''}>简单</option><option value="normal" ${!values.aiDifficulty || values.aiDifficulty === 'normal' ? 'selected' : ''}>普通</option><option value="hard" ${values.aiDifficulty === 'hard' ? 'selected' : ''}>困难</option><option value="aggressive" ${values.aiDifficulty === 'aggressive' ? 'selected' : ''}>激进</option></select></label><label class="checkline"><input type="checkbox" checked>开启动画</label></div>`;
+  return `<div class="form-grid settings-grid"><label class="form-field"><span>玩家人数</span><input id="${prefix}maxPlayers" type="number" min="2" max="8" value="${values.maxPlayers || 4}" onchange="emitSettings('${prefix}')"></label><label class="form-field"><span>初始临时积分</span><input id="${prefix}initialPoints" type="number" value="${values.initialPoints || 1000}" onchange="emitSettings('${prefix}')"></label><label class="form-field"><span>底注</span><input id="${prefix}ante" type="number" value="${values.ante || 50}" onchange="emitSettings('${prefix}')"></label>${includeAI ? `<label class="form-field checkline"><span>AI 补位</span><span class="inline-check"><input id="${prefix}allowAI" type="checkbox" ${values.allowAI !== false ? 'checked' : ''} onchange="emitSettings('${prefix}')">允许 AI 补位</span></label>` : '<input id="soloallowAI" type="hidden" checked>'}<label class="form-field"><span>AI 难度</span><select id="${prefix}aiDifficulty" onchange="emitSettings('${prefix}')"><option value="easy" ${values.aiDifficulty === 'easy' ? 'selected' : ''}>简单</option><option value="normal" ${!values.aiDifficulty || values.aiDifficulty === 'normal' ? 'selected' : ''}>普通</option><option value="hard" ${values.aiDifficulty === 'hard' ? 'selected' : ''}>困难</option><option value="aggressive" ${values.aiDifficulty === 'aggressive' ? 'selected' : ''}>激进</option></select></label><label class="form-field checkline"><span>发牌动画</span><span class="inline-check"><input type="checkbox" checked>开启</span></label></div>`;
 }
 
 function renderRoomLobby() {
@@ -178,7 +179,27 @@ function renderLobbyPlayer(player) {
 }
 
 function renderGameTable() {
-  return `<section class="game-shell"><div class="top-bar"><button class="secondary" onclick="go('home')">返回首页</button><button class="secondary" onclick="ruleIntroOpen=true;render()">规则介绍</button><span>当前模式：${state.mode === 'local' ? '单机' : '联机'}</span>${state.mode === 'online' ? `<span>房间：${state.code}</span><button class="secondary" onclick="copyRoomCode()">复制房间码</button>` : ''}${statusPills()}</div><div class="table-layout"><main class="felt-table"><div class="pot-center"><div class="deck-icon">♠</div><strong>底池 ${state.pot || 0}</strong><small>当前下注 ${state.currentBet || 0}</small></div>${renderPlayers()}</main><aside class="side-panel">${renderActions()}${renderResult()}<p class="mini-compliance">仅娱乐模拟；积分为本场临时分数，结束清零。</p><section class="panel"><h2>游戏日志</h2><div class="logs">${(state.logs || []).map((x) => `<div>${x}</div>`).join('')}</div></section></aside></div></section>`;
+  const self = me();
+  const opponents = (state.players || []).filter((p) => p.id !== self?.id);
+  const top = opponents.filter((_, i) => i % 3 === 0);
+  const left = opponents.filter((_, i) => i % 3 === 1);
+  const right = opponents.filter((_, i) => i % 3 === 2);
+  return `<section class="game-shell play-view"><div class="compact-topbar"><button class="secondary" onclick="go('home')">返回首页</button><button class="secondary" onclick="ruleIntroOpen=true;render()">规则介绍</button><span>模式：${state.mode === 'local' ? '单机' : '联机'}</span>${state.mode === 'online' ? `<span>房间：${state.code}</span><button class="secondary" onclick="copyRoomCode()">复制房间码</button>` : ''}${statusPills()}</div><div class="game-table-layout"><div class="opponents opponents-top">${top.map(renderCompactPlayerCard).join('')}</div><div class="table-middle"><div class="opponents opponents-left">${left.map(renderCompactPlayerCard).join('')}</div><div class="pot-area"><div class="deck-card back"></div><strong>底池 ${state.pot || 0}</strong><span>当前下注 ${state.currentBet || 0}</span><small>${state.phase === 'dealing' ? '正在发牌...' : state.phase === 'playing' ? '等待玩家行动' : state.phase === 'handFinished' ? '本手已结算' : state.phase === 'gameFinished' ? '整场已结束' : '准备中'}</small></div><div class="opponents opponents-right">${right.map(renderCompactPlayerCard).join('')}</div></div></div>${renderMyPlayerZone(self)}<div class="bottom-panels">${renderResult()}${renderGameLogs()}</div></section>`;
+}
+
+function renderCompactPlayerCard(player) {
+  const hr = state.reveal?.find((r) => r.playerId === player.id);
+  return `<div class="compact-player-card ${player.current ? 'current' : ''} ${hr?.winner ? 'handWinner' : ''} ${player.eliminated ? 'eliminated' : ''}"><div class="compact-head"><strong>${player.nickname}</strong><span>${player.isAI ? 'AI' : '真人'}</span></div><div class="compact-meta"><span>${player.points} 分</span><span>投入 ${player.bet}</span></div><div class="compact-status">${player.spectator ? '旁观' : player.eliminated ? '已淘汰' : player.folded ? '已弃牌' : player.looked ? '已看牌' : '未看牌'}</div><div class="compact-cards">${renderCards(player)}</div></div>`;
+}
+
+function renderMyPlayerZone(player) {
+  if (!player) return `<section class="my-player-zone"><p>正在同步玩家状态...</p></section>`;
+  const hr = state.reveal?.find((r) => r.playerId === player.id);
+  return `<section class="my-player-zone ${player.current ? 'current' : ''} ${player.eliminated ? 'eliminated' : ''} ${hr?.winner ? 'handWinner' : ''}"><div class="my-player-info"><strong>${player.nickname} ${player.isHost ? '👑' : ''}</strong><span>${player.isAI ? 'AI ' + player.aiDifficulty : '我的座位'}</span><span>临时积分：${player.points}</span><span>本手投入：${player.bet}</span><span>状态：${player.spectator ? '旁观' : player.eliminated ? '已淘汰' : player.folded ? '已弃牌' : player.looked ? '已看牌' : '未看牌'}</span></div><div class="my-cards">${renderCards(player)}</div><div class="my-actions">${renderActions()}</div><p class="mini-compliance">仅娱乐模拟；积分为本场临时分数，结束清零。</p></section>`;
+}
+
+function renderGameLogs() {
+  return `<section class="panel log-panel"><div class="log-head"><h2>游戏日志</h2><button class="secondary" onclick="logOpen=!logOpen;render()">${logOpen ? '收起日志' : '查看日志'}</button></div>${logOpen ? `<div class="logs">${(state.logs || []).map((x) => `<div>${x}</div>`).join('')}</div>` : `<p class="muted">日志已折叠，点击“查看日志”查看最近操作。</p>`}</section>`;
 }
 
 function statusPills() {
@@ -190,27 +211,17 @@ function statusPills() {
 
 function renderRuleIntroModal() {
   if (!ruleIntroOpen) return '';
-  const s = state?.settings || defaultLocalSettings();
-  const ps = state?.players || [];
-  const items = [
-    '本游戏仅为娱乐模拟，不涉及真实金钱。',
-    '所有积分都是本场临时娱乐分数。',
-    `初始临时积分：${s.initialPoints ?? '未设置'}；底注：${s.ante ?? '未设置'}；玩家人数：${ps.length || 0} / ${s.maxPlayers ?? '未设置'}。`,
-    '每名玩家每手发 3 张牌。',
-    '可操作项：看牌、跟注、加注、弃牌、比牌。',
-    '牌型大小：豹子 > 顺金 > 金花 > 顺子 > 对子 > 散牌。',
-    'A23 视为最小顺子。',
-    'QKA 视为最大顺子。',
-    '花色不参与大小比较。',
-    '一手牌只剩一名未弃牌玩家时，该玩家赢得底池。',
-    '玩家临时积分输光后淘汰。',
-    '淘汰玩家可以选择一名玩家旁观。',
-    '旁观对象选择后本场不可更改。',
-    '旁观者默认不能看到未公开手牌。',
-    '场上只剩一名未淘汰玩家时，整场游戏结束。',
-    '整场游戏结束后所有临时积分清零。',
+  const sections = [
+    ['游戏性质', '本游戏仅为扑克牌规则娱乐模拟，不涉及真实金钱、充值、提现、兑换、奖励或任何形式的赌博行为。页面中的积分只是本场游戏内的临时娱乐分数，用来模拟下注、跟注、加注和结算过程。整场游戏结束后，所有临时积分都会清零，不会保存为账户余额，也不能转让或兑换任何现实利益。'],
+    ['游戏目标', '每位玩家在游戏开始时获得相同数量的临时积分。每一手牌中，玩家通过看牌、跟注、加注、弃牌和比牌参与对局。赢得一手牌的玩家获得本手底池。玩家临时积分归零后被淘汰。整场游戏会一直进行，直到场上只剩最后一名未淘汰玩家，该玩家成为本场胜者。'],
+    ['一手牌流程', '每一手开始时，所有未淘汰玩家自动投入底注，并各自获得三张牌。玩家可以选择先不看牌继续行动，也可以点击“看牌”查看自己的三张牌。之后玩家按顺序行动，可以跟注、加注、弃牌或选择一名未弃牌玩家比牌。本手牌会在只剩一名未弃牌玩家时结束，该玩家赢得底池。'],
+    ['可用操作', '看牌用于查看自己的三张牌，其他玩家仍然看不到你的牌；跟注是投入当前需要跟上的积分并继续留在本手；加注会提高当前下注额；弃牌表示放弃本手，已经投入的积分留在底池中；比牌会选择另一名未弃牌玩家进行牌型比较，牌小的一方退出本手。'],
+    ['牌型大小', '炸金花使用三张牌比较大小。牌型从大到小依次为：豹子（三张点数相同，例如 A-A-A）、顺金（三张同花色且连续，例如黑桃 Q-K-A）、金花（三张同花色但不连续）、顺子（三张点数连续但花色不完全相同）、对子（两张点数相同）、散牌（不符合以上任何牌型）。'],
+    ['点数比较', '点数大小顺序为：A > K > Q > J > 10 > 9 > 8 > 7 > 6 > 5 > 4 > 3 > 2。A-2-3 可以作为最小顺子，Q-K-A 可以作为最大顺子。若双方牌型相同，则继续比较牌面点数；若仍然完全相同，则视为平局。花色不参与最终大小比较。'],
+    ['淘汰与旁观', '每一手结束后，系统会检查所有玩家的临时积分。积分归零的玩家会被淘汰，不能继续下注、看牌、加注、弃牌或比牌。被淘汰玩家可以选择一名仍在场上的玩家进行旁观。旁观对象一旦选择，本场游戏内不可更改。默认情况下，旁观者不能看到未公开的手牌。'],
+    ['游戏结束', '本游戏不设置最大轮数。整场游戏不会因为回合数达到上限而结束。只有当场上只剩一名未淘汰玩家时，整场游戏才会结束。游戏结束后，系统显示最终胜者，并清空所有临时积分。'],
   ];
-  return `<div class="modal-mask" onclick="ruleIntroOpen=false;render()"><section class="rule-modal" onclick="event.stopPropagation()"><div class="rule-modal-head"><h2>规则介绍</h2><button class="secondary" onclick="ruleIntroOpen=false;render()">关闭</button></div><div class="rule-intro-list">${items.map((item) => `<div class="rule done">${item}</div>`).join('')}</div></section></div>`;
+  return `<div class="modal-mask" onclick="ruleIntroOpen=false;render()"><section class="rule-modal rich-rules" onclick="event.stopPropagation()"><div class="rule-modal-head"><h2>规则介绍</h2><button class="secondary" onclick="ruleIntroOpen=false;render()">关闭</button></div><div class="rule-sections">${sections.map(([title, text]) => `<article class="rule-section"><h3>${title}</h3><p>${text}</p></article>`).join('')}</div></section></div>`;
 }
 
 function renderPlayers() {
