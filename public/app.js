@@ -109,6 +109,24 @@ function canAct() {
   return state?.phase === 'playing' && p?.current && !p.eliminated && !p.spectator && !p.folded;
 }
 
+function getActionHint(player = me()) {
+  if (!player) return '正在同步玩家状态';
+  if (player.eliminated) return '你已淘汰，可以选择旁观对象';
+  if (player.spectator) return '旁观状态下不能进行操作';
+  if (player.folded) return '你已弃牌，本手不再参与胜负';
+  if (!player.current) return '等待其他玩家行动';
+  if (player.looked) return '轮到你行动：你已看牌，可继续跟注、加注、弃牌或比牌';
+  return '轮到你行动：你可以先看牌，也可以直接跟注（积分不足时将自动全下）';
+}
+
+function adjustRaiseAmount(delta) {
+  const input = $('raiseAmount');
+  if (!input) return;
+  const base = (state?.currentBet || 0) + (state?.settings?.ante || 50);
+  const current = Number.parseInt(input.value || base, 10);
+  input.value = Math.max(base, (Number.isNaN(current) ? base : current) + delta);
+}
+
 function sendAction(action) {
   if (!socket) return;
   const data = { action };
@@ -243,10 +261,13 @@ function card(c, i) {
 
 function renderActions() {
   const p = me() || {};
-  const disabled = !canAct() ? 'disabled' : '';
+  const actionable = canAct();
+  const disabled = !actionable ? 'disabled' : '';
   const targets = (state.players || []).filter((x) => x.id !== p.id && !x.eliminated && !x.spectator && !x.folded);
   const canSpectate = p.eliminated && !p.spectateTargetId;
-  return `<section class="panel action-panel"><h2>操作区</h2><div class="actions"><button ${disabled} onclick="sendAction('look')">看牌</button><button ${disabled} onclick="sendAction('call')">跟注</button><input id="raiseAmount" type="number" value="${(state.currentBet || 0) + (state.settings?.ante || 50)}"><button ${disabled} onclick="sendAction('raise')">加注</button><button class="danger" ${disabled} onclick="sendAction('fold')">弃牌</button><select id="compareTarget">${targets.map((t) => `<option value="${t.id}">${t.nickname}</option>`).join('')}</select><button ${disabled || !targets.length ? 'disabled' : ''} onclick="sendAction('compare')">比牌</button></div>${canSpectate ? `<div><h3>进入旁观</h3><select id="spectateTarget">${targets.map((t) => `<option value="${t.id}">${t.nickname}</option>`).join('')}</select><button onclick="chooseSpectateTarget()">选择旁观对象</button></div>` : p.spectateTargetId ? `<p>正在旁观：${state.players.find((x) => x.id === p.spectateTargetId)?.nickname || '旁观对象已淘汰'}</p>` : ''}</section>`;
+  const step = state.settings?.ante || 50;
+  const defaultRaise = (state.currentBet || 0) + step;
+  return `<section class="action-panel ${actionable ? 'is-active' : 'is-waiting'}"><div class="action-panel-header"><div><h3>我的操作</h3><span>${getActionHint(p)}</span></div>${!actionable ? '<b class="action-lock">不可操作</b>' : '<b class="action-ready">轮到你</b>'}</div><div class="action-primary-row"><button class="action-main" ${disabled} onclick="sendAction('look')">看牌</button><button class="action-main" ${disabled} onclick="sendAction('call')">跟注</button></div><div class="raise-control"><label>加注金额</label><div class="raise-input-row"><button class="secondary" ${disabled} onclick="adjustRaiseAmount(-${step})">-${step}</button><input id="raiseAmount" type="number" min="${defaultRaise}" value="${defaultRaise}"><button class="secondary" ${disabled} onclick="adjustRaiseAmount(${step})">+${step}</button><button ${disabled} onclick="sendAction('raise')">加注</button></div><small>积分不足时，服务端会按当前剩余积分全下处理。</small></div><div class="compare-control"><label>选择比牌对象</label><div class="compare-row"><select id="compareTarget" ${disabled || !targets.length ? 'disabled' : ''}>${targets.map((t) => `<option value="${t.id}">${t.nickname}</option>`).join('')}</select><button ${disabled || !targets.length ? 'disabled' : ''} onclick="sendAction('compare')">比牌</button></div>${targets.length ? '' : '<small>暂无可比牌对象</small>'}</div><div class="danger-row"><span>弃牌后本手不再参与胜负</span><button class="danger" ${disabled} onclick="sendAction('fold')">弃牌</button></div>${canSpectate ? `<div class="spectate-control"><label>进入旁观</label><div class="compare-row"><select id="spectateTarget">${targets.map((t) => `<option value="${t.id}">${t.nickname}</option>`).join('')}</select><button onclick="chooseSpectateTarget()">选择旁观对象</button></div></div>` : p.spectateTargetId ? `<p>正在旁观：${state.players.find((x) => x.id === p.spectateTargetId)?.nickname || '旁观对象已淘汰'}</p>` : ''}</section>`;
 }
 
 function renderResult() {
